@@ -29,21 +29,3 @@ if __name__ == '__main__':
     else:
         print('Status url: ',False)
 print(time.time() - t0)
-#%%
-
-df = pd.read_csv('dataset_flujo_vehicular.csv')
-df = df.drop_duplicates(keep='first')
-df = df.dropna(how='any')    #to drop if any value in the row has a nan
-
-df['HORA'] = df['HORA'].apply(lambda x: dt.datetime.strptime(x,'%d%b%Y:%H:%M:%S')) # Convierto la fecha en formato dd-mm-aaaa...
-detectors = df.drop_duplicates(subset= ['CODIGO_LOCACION'],keep = 'last')
-print(detectors)
-
-#%%
-
-df2 = pd.read_csv(file)
-df2 = df2.drop_duplicates(keep='first')
-df2 = df2.dropna(how='any') 
-detectors2 = df2.drop_duplicates(subset= ['Disp Nombre'],keep = 'first')
-print(detectors2)
-
