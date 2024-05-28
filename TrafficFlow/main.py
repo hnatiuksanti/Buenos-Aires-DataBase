@@ -10,7 +10,6 @@ if __name__ == '__main__':
     if f.status_url(url):
         last_date = f.get_last_update(url, year) 
         df_name = list(filter(lambda x: x.endswith('.csv') and year in x, os.listdir(os.getcwd())))
-        print(df_name)
         if df_name != []:
             if not f.check_last_update(last_date):
                 df = pd.read_csv(df_name[0]) #Abro el dataset que voy a actualizar
