@@ -1,69 +1,41 @@
-import math
-import numpy as np
-import os
-from matplotlib import pyplot as plt
-import scipy.optimize
-import sympy as sp 
+import funciones as f
 import pandas as pd
-from IPython import get_ipython
-from scipy.optimize import curve_fit
-import scipy.signal
-from scipy.signal import argrelextrema
-import matplotlib as mtp
-from scipy.stats import norm
-import matplotlib.mlab as mlab
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from IPython import display
-import networkx as nx
-import matplotlib.animation as animation
-from decimal import Decimal, ROUND_HALF_UP
-
-from sympy.solvers import solve 
-from sympy import Symbol
-from sympy import*
-#from matplotlib.animation import FuncAnimation, PillowWriter 
-# import funciones
-# get_ipython().run_line_magic('matplotlib', 'inline')
-get_ipython().run_line_magic('matplotlib', 'qt5') 
-
-#%%
-import requests
-from bs4 import BeautifulSoup
- 
-def status_url(url): # if res.ok < 400, status = True
-    res = requests.get(url)
-    status = res.ok
-    return status
-
-def get_href(url):
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    soups = soup.findAll('a', class_ = 'btn')
-    for s in soups :
-        if s.get('href')[-8:-4] == year:
-            return s.get('href')
-            
-def save_in_folder(url):
-    r = requests.get(url)
-    file = 'traffic_flow' + year + '.csv'
-    with open(file,'wb') as f:
-        f.write(r.content)
-    return file   
+import os
+import numpy as np
+import time
+# link = 'https://cdn.buenosaires.gob.ar/datosabiertos/datasets/ausa/flujo-vehicular-por-radares-ausa/flujo-vehicular-por-radares-2024.csv '
+t0 = time.time()
 if __name__ == '__main__':
     url = 'https://data.buenosaires.gob.ar/dataset/flujo-vehicular-por-radares-ausa'; year = '2024'
-    if status_url(url) == True:
-        link = get_href(url)
-        file = save_in_folder(link)
+    if f.status_url(url):
+        last_date = f.get_last_update(url, year) 
+        df_name = list(filter(lambda x: x.endswith('.csv') and year in x, os.listdir(os.getcwd())))
+        print(df_name)
+        if df_name != []:
+            if not f.check_last_update(last_date):
+                df = pd.read_csv(df_name[0]) #Abro el dataset que voy a actualizar
+                href = f.get_href(url,year) #Obtengo el archivo para descargar. 
+                df_new = f.create_dataframe(f.download_dataset(href,last_date)) #Descargo el archivo y creo el nuevo dataframe 
+                f.update_dataset(df,df_new,df_name[0],last_date)
+                print('¡Dataset actualizado!')
+            else:
+                print('No hay actualizaciones nuevas.')
+        else:
+            href = f.get_href(url,year) 
+            df_new = f.create_dataframe(f.download_dataset(href,last_date))
+            os.remove('dataset'+last_date+'.csv')
+            df_new.to_csv('dataset'+last_date+'.csv', index = False)
+            print('¡Dataset descargado!')
     else:
-        print(False)
+        print('Status url: ',False)
+print(time.time() - t0)
 #%%
 
 df = pd.read_csv('dataset_flujo_vehicular.csv')
 df = df.drop_duplicates(keep='first')
 df = df.dropna(how='any')    #to drop if any value in the row has a nan
-import datetime as dt
-df['HORA'] = df['HORA'].apply(lambda x: dt.datetime.strptime(x,'%d%b%Y:%H:%M:%S')) # Convierto la fecha en formato dd-mm-aaaa...
 
+df['HORA'] = df['HORA'].apply(lambda x: dt.datetime.strptime(x,'%d%b%Y:%H:%M:%S')) # Convierto la fecha en formato dd-mm-aaaa...
 detectors = df.drop_duplicates(subset= ['CODIGO_LOCACION'],keep = 'last')
 print(detectors)
 
@@ -72,7 +44,6 @@ print(detectors)
 df2 = pd.read_csv(file)
 df2 = df2.drop_duplicates(keep='first')
 df2 = df2.dropna(how='any') 
-
 detectors2 = df2.drop_duplicates(subset= ['Disp Nombre'],keep = 'first')
 print(detectors2)
 
