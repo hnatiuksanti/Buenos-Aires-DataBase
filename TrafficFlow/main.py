@@ -28,3 +28,26 @@ if __name__ == '__main__':
     else:
         print('Status url: ',False)
 print(time.time() - t0)
+#%%
+''' Graficar en mapa de Buenos Aires '''
+from IPython import get_ipython
+get_ipython().run_line_magic('matplotlib', 'qt5') 
+import plotly.express as px
+import plotly.io as pio
+
+df = df_new[ (df_new['Dia']==20) & (df_new['Mes']==2)] #Filtro por dia y mes. 
+
+# Luego de filtrar, Creo df nuevos con las columnas de datos que me interesan mostrar.
+df['Lat']= df['Disp Lat']  ; df['Lon'] =  df['Disp Lng'] ;  df['Veh/hs'] = df['H_Cant_Veh']
+
+# Create basic choropleth map
+fig = px.scatter_mapbox(df, lat=df['Lat'], lon=df['Lon'], color=df['Veh/hs'], size=df['Veh/hs'],
+                  color_continuous_scale=px.colors.cyclical.IceFire, size_max=10, zoom=12,
+                  mapbox_style="carto-positron",   hover_name=df['Disp Nombre'],
+                  title='Vehiculos por hora, fecha {dia}/{mes}'.format( mes = 2, dia = 20, hora= 17), animation_frame=df['Hora de H_Fecha'],
+                  )
+fig.show()
+pio.write_html(fig, file='traficflowba.html', auto_open=True) # Guardo y muestro.
+
+
+
